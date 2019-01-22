@@ -24,7 +24,7 @@ def process_packet(packets):
             elif scapy_pack[scapy.TCP].sport == 80:
                 print("[+] HTTP Responce :")
 
-        except IndexError:
+        except IndexError or NameError:
             pass
 
 

